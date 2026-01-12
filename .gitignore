@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pdf
+# Allow specific data files so the repo works out-of-the-box
+!faq_index.faiss
+!chunks_mapping.json
+!chunks.json
+.env
+.DS_Store

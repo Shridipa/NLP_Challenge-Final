@@ -1,0 +1,10 @@
+gradio
+transformers
+sentence-transformers
+faiss-cpu
+numpy
+torch
+pypdf
+nltk
+pytesseract
+pillow
