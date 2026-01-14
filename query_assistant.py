@@ -2,6 +2,7 @@ import json
 import os
 import numpy as np
 import faiss
+import re
 from sentence_transformers import SentenceTransformer, CrossEncoder
 
 embedding_model = SentenceTransformer('all-mpnet-base-v2')
@@ -37,96 +38,101 @@ def expand_query(query):
         return query + " " + " ".join(list(set(expanded_terms))[:3])
     return query
 
+def get_bigrams(text):
+    words = re.findall(r'\w{3,}', text.lower())
+    return set(zip(words, words[1:]))
+
 def retrieve_chunks(query, index_path, mapping_path, k=5, boost_keywords=None, section_filter=None):
     """Retrieves top-k relevant chunks with metadata filtering and re-ranking."""
     global _cached_index, _cached_mapping, _cached_index_path, _cached_mapping_path
+    import re
     
     # Query Normalization & Expansion
-    query = query.strip().replace("?", "").replace("!", "")
+    query_clean = query.strip().replace("?", "").replace("!", "")
+    query_clean = query_clean.replace("/r_t.liga", "rt").replace("/r_f.liga", "rf")
+    query_clean = query_clean.replace("t_t.liga", "tt").replace("f_f.liga", "ff")
+    query_clean = query_clean.replace("/uni20B9", "₹")
     
-    # Clean potential PDF artifacts if pasted into query
-    query = query.replace("/r_t.liga", "rt").replace("/r_f.liga", "rf")
-    query = query.replace("t_t.liga", "tt").replace("f_f.liga", "ff")
-    query = query.replace("/uni20B9", "₹")
-    
-    expanded_query = expand_query(query)
+    expanded_query = expand_query(query_clean)
     base_dir = os.path.dirname(os.path.abspath(__file__))
     if not os.path.isabs(index_path): index_path = os.path.join(base_dir, index_path)
     if not os.path.isabs(mapping_path): mapping_path = os.path.join(base_dir, mapping_path)
     
     if not os.path.exists(index_path) or not os.path.exists(mapping_path): return None
         
-    if _cached_index_path != index_path:
+    if _cached_index_path != index_path or _cached_index is None:
         _cached_index = faiss.read_index(index_path)
         _cached_index_path = index_path
     
-    if _cached_mapping_path != mapping_path:
+    if _cached_mapping_path != mapping_path or _cached_mapping is None:
         with open(mapping_path, 'r', encoding='utf-8') as f:
             _cached_mapping = json.load(f)
+            # Pre-calculate bigrams for all chunks to speed up hybrid search
+            for chunk in _cached_mapping:
+                chunk['_bigrams'] = get_bigrams(chunk['content'])
         _cached_mapping_path = mapping_path
         
     index = _cached_index
     chunks = _cached_mapping
-    import re
         
+    # 1. Vector Search (Semantic)
     query_vector = embedding_model.encode([expanded_query]).astype('float32')
-    # Increase candidate pool for better recall
-    distances, indices = index.search(query_vector, 100)
+    distances, indices = index.search(query_vector, 120) 
     
-    candidates = []
+    # 2. Hybrid RRF
     query_tokens = set(re.findall(r'\w{3,}', expanded_query.lower()))
+    query_bigrams = get_bigrams(expanded_query)
     
-    for i in range(100):
-        idx = indices[0][i]
+    candidate_map = {}
+    for rank, idx in enumerate(indices[0]):
         if idx < len(chunks):
-            chunk = chunks[idx].copy() # Work on a copy
-            chunk_tokens = set(re.findall(r'\w{3,}', chunk['content'].lower()))
+            chunk = chunks[idx].copy()
+            rrf_score = 1.0 / (60 + rank)
+            
+            content_lower = chunk['content'].lower()
+            chunk_tokens = set(re.findall(r'\w{3,}', content_lower))
             overlap = len(query_tokens.intersection(chunk_tokens))
             
-            # Hybrid pre-score: Inverse distance + lexical overlap boost
-            semantic_score = 1.0 / (1.0 + distances[0][i])
-            lexical_boost = overlap * 0.1
-            chunk["pre_score"] = semantic_score + lexical_boost
-            candidates.append(chunk)
+            # Use pre-calculated bigrams
+            chunk_bigrams = chunk.get('_bigrams', set())
+            bigram_overlap = len(query_bigrams.intersection(chunk_bigrams))
+            
+            lexical_score = (overlap * 0.05) + (bigram_overlap * 0.15)
+            chunk["rrf_score"] = rrf_score + lexical_score
+            candidate_map[idx] = chunk
 
-    if not candidates:
+    # Sort candidates by hybrid RRF score
+    sorted_candidates = sorted(candidate_map.values(), key=lambda x: x["rrf_score"], reverse=True)
+    rerank_pool = sorted_candidates[:45] # Balanced for speed/precision
+
+    if not rerank_pool:
         return []
 
-    # Take top 50 for expensive re-ranking
-    candidates.sort(key=lambda x: x.get("pre_score", 0), reverse=True)
-    rerank_pool = candidates[:50]
-
-    pairs = [[query, c['content']] for c in rerank_pool]
+    # 3. Re-ranking (Cross-Encoder)
+    pairs = [[query_clean, c['content']] for c in rerank_pool]
     rerank_scores = rerank_model.predict(pairs)
-    
-    # Prepare boosts from known entities
-    entities = {} # Placeholder, will be passed from main_assistant in future or extracted
     
     for i, candidate in enumerate(rerank_pool):
         boost = 0
         if boost_keywords:
             content_lower = candidate['content'].lower()
             for kw in boost_keywords:
-                if kw.lower() in content_lower: boost += 1.0 # Increased boost
+                if kw.lower() in content_lower: boost += 1.0 
         
-        # Numerical exact match boost (Crucial for annual reports)
-        query_numbers = re.findall(r'\b\d{2,}\b', query)
+        query_numbers = re.findall(r'\b\d{2,}\b', query_clean)
         content_text = candidate['content']
         for num in query_numbers:
             if num in content_text:
-                boost += 2.0 # Significant boost for numbers
+                boost += 2.0 
         
-        # Section alignment boost
         if section_filter and section_filter.lower() in candidate.get('section', '').lower():
             boost += 1.5
             
-        candidate["score"] = rerank_scores[i] + boost + 5.0 
-        candidate["vector_distance"] = float(distances[0][i])
+        candidate["score"] = float(rerank_scores[i]) + boost + 6.0
+        candidate["vector_distance"] = float(distances[0][i]) if i < len(distances[0]) else 100.0
 
     rerank_pool.sort(key=lambda x: x['score'], reverse=True)
-    results = rerank_pool[:k]
-    
-    return results
+    return rerank_pool[:k]
 
 def format_rag_prompt(user_query, retrieved_chunks):
     """Formats the RAG prompt."""

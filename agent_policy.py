@@ -8,15 +8,14 @@ def decide_next_step(intent_data, sentiment_data, entities, retrieval_score=0.0,
     sentiment = sentiment_data.get("sentiment", "neutral")
     is_urgent = sentiment_data.get("is_urgent", False)
     
-    action_threshold = 0.65
-    rag_threshold = 0.50 # This matches the +5.0 shift in query_assistant
+    rag_threshold = 0.40 # Grounded shift (+6.0 in rerank) means 0.40 is quite high confidence
 
-    # If it's an ask_ intent, we almost always want to try answering
-    if intent.startswith("ask_") and retrieval_score > 1.0:
+    # If it's an ask_ intent, we prioritize answering
+    if intent.startswith("ask_") and retrieval_score >= rag_threshold:
         return {
             "next_step": "answer",
             "missing_entities": [],
-            "reason": f"Grounded informational query with score {retrieval_score:.2f}."
+            "reason": f"Sufficient retrieval score ({retrieval_score:.2f}) for grounded informational query."
         }
 
     if (is_urgent or sentiment == "negative") and confidence < 0.4:
