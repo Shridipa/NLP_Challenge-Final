@@ -12,9 +12,12 @@ def analyze_sentiment_and_urgency(query):
     label = sentiment_result['label'].lower()
     score = sentiment_result['score']
     
+    question_keywords = ["what", "how", "who", "where", "when", "why", "revenue", "profit", "ebitda", "growth"]
+    is_question = any(query.lower().startswith(kw) for kw in question_keywords) or "?" in query
+    
     if label == "positive" and score > 0.85:
         final_sentiment = "positive"
-    elif label == "negative" and score > 0.85:
+    elif label == "negative" and score > 0.85 and not is_question:
         final_sentiment = "negative"
     else:
         final_sentiment = "neutral"

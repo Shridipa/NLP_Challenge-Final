@@ -67,45 +67,66 @@ def retrieve_chunks(query, index_path, mapping_path, k=5, boost_keywords=None, s
         
     index = _cached_index
     chunks = _cached_mapping
+    import re
         
     query_vector = embedding_model.encode([expanded_query]).astype('float32')
-    distances, indices = index.search(query_vector, k*20)
+    # Increase candidate pool for better recall
+    distances, indices = index.search(query_vector, 100)
     
     candidates = []
-    for i in range(k*20):
+    query_tokens = set(re.findall(r'\w{3,}', expanded_query.lower()))
+    
+    for i in range(100):
         idx = indices[0][i]
         if idx < len(chunks):
-            candidates.append(chunks[idx])
+            chunk = chunks[idx].copy() # Work on a copy
+            chunk_tokens = set(re.findall(r'\w{3,}', chunk['content'].lower()))
+            overlap = len(query_tokens.intersection(chunk_tokens))
+            
+            # Hybrid pre-score: Inverse distance + lexical overlap boost
+            semantic_score = 1.0 / (1.0 + distances[0][i])
+            lexical_boost = overlap * 0.1
+            chunk["pre_score"] = semantic_score + lexical_boost
+            candidates.append(chunk)
 
     if not candidates:
         return []
 
-    # Re-rank only the top candidates - increased to k*8 (40 for k=5)
-    candidates = candidates[:k*8]
+    # Take top 50 for expensive re-ranking
+    candidates.sort(key=lambda x: x.get("pre_score", 0), reverse=True)
+    rerank_pool = candidates[:50]
 
-    pairs = [[query, c['content']] for c in candidates]
+    pairs = [[query, c['content']] for c in rerank_pool]
     rerank_scores = rerank_model.predict(pairs)
     
-    for i, candidate in enumerate(candidates):
+    # Prepare boosts from known entities
+    entities = {} # Placeholder, will be passed from main_assistant in future or extracted
+    
+    for i, candidate in enumerate(rerank_pool):
         boost = 0
-        # Keyword boost
         if boost_keywords:
             content_lower = candidate['content'].lower()
             for kw in boost_keywords:
-                if kw.lower() in content_lower: boost += 0.5
+                if kw.lower() in content_lower: boost += 1.0 # Increased boost
         
-        # Section boost (Soft filter)
+        # Numerical exact match boost (Crucial for annual reports)
+        query_numbers = re.findall(r'\b\d{2,}\b', query)
+        content_text = candidate['content']
+        for num in query_numbers:
+            if num in content_text:
+                boost += 2.0 # Significant boost for numbers
+        
+        # Section alignment boost
         if section_filter and section_filter.lower() in candidate.get('section', '').lower():
-            boost += 1.0
-        
-        candidate["score"] = rerank_scores[i] + boost
+            boost += 1.5
+            
+        candidate["score"] = rerank_scores[i] + boost + 5.0 
         candidate["vector_distance"] = float(distances[0][i])
 
-    candidates.sort(key=lambda x: x['score'], reverse=True)
-    results = candidates[:k]
-    filtered_results = [r for r in results if r['score'] > -7.0] 
+    rerank_pool.sort(key=lambda x: x['score'], reverse=True)
+    results = rerank_pool[:k]
     
-    return filtered_results
+    return results
 
 def format_rag_prompt(user_query, retrieved_chunks):
     """Formats the RAG prompt."""

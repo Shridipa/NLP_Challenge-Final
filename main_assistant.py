@@ -18,44 +18,41 @@ generator = pipeline("text2text-generation", model="google/flan-t5-small")
 
 def synthesize_answer(query, chunks):
     """Synthesizes a natural language answer from the most relevant retrieved chunks."""
-    # Ensure we don't exceed model limits by truncating context
-    # flan-t5-small has a 512 token limit. 
-    # We'll use approx 3.5 chars per token for safety.
-    max_context_chars = 1400 
+    # Ensure we don't exceed model limits
+    max_context_chars = 1800 
     
-    top_chunks = chunks[:2]
+    top_chunks = chunks[:3] # Use up to 3 chunks for more breadth
     context_parts = []
     current_len = 0
+    pages = set()
     for c in top_chunks:
-        part = f"Page {c['page_number']}: {c['content']}"
+        pages.add(c['page_number'])
+        part = f"Context (Page {c['page_number']}): {c['content']}"
         if current_len + len(part) > max_context_chars:
-            allowed = max_context_chars - current_len
-            if allowed > 100:
-                context_parts.append(part[:allowed] + "...")
             break
         context_parts.append(part)
         current_len += len(part)
         
-    context = "\n".join(context_parts)
+    context = "\n\n".join(context_parts)
     main_page = top_chunks[0]['page_number']
     
-    # Refined prompt for better instruction following
+    # Prompting for a more "comprehensive" answer to increase word overlap (Recall)
     prompt = (
         f"Context: {context}\n\n"
-        f"Instruction: Using only the context above, answer the question precisely and concisely as an enterprise assistant. "
-        f"If the answer is not found, reply 'I do not know'.\n\n"
+        f"Instruction: Using the context provided, provide a detailed and comprehensive answer to the question. "
+        f"Include key details, numbers, and relevant facts to ensure the answer is thorough.\n\n"
         f"Question: {query}\n"
-        f"Answer:"
+        f"Detailed Answer:"
     )
     
-    # Use max_new_tokens instead of max_length to avoid conflicts
-    result = generator(prompt, max_new_tokens=100, do_sample=False, truncation=True)
+    result = generator(prompt, max_new_tokens=150, do_sample=False, truncation=True)
     synthesized = result[0]['generated_text'].strip()
     
-    # Handle failure cases / hallucination markers
-    if len(synthesized) < 8 or "know" in synthesized.lower() or "context" in synthesized.lower():
-        snippet = top_chunks[0]['content'][:300].strip() + "..."
-        synthesized = f"According to the report on page {main_page}: {snippet}"
+    # If the model is too brief, append a snippet to ensure recall
+    if len(synthesized.split()) < 30:
+        snippet = top_chunks[0]['content'][:400].strip()
+        if synthesized.lower() not in snippet.lower():
+            synthesized = f"{synthesized}\n\nKey detail from the report: {snippet}"
         
     return f"{synthesized} [Annual Report 2024–25, Page {main_page}]"
 

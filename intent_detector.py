@@ -28,11 +28,11 @@ def detect_intent(query, context=""):
     
     if confidence < 0.7:
         keyword_maps = {
-            "ask_people": ["ceo", "cfo", "chairman", "chairperson", "leader", "executive", "founder", "roshni", "nadar", "shiv", "vijaykumar", "management", "directors", "chairwoman"],
-            "ask_hr": ["policy", "leave", "holiday", "benefit", "payroll", "salary", "pf", "insurance", "hr", "recruitment", "headcount"],
+            "ask_people": ["ceo", "cfo", "chairman", "chairperson", "leader", "executive", "founder", "roshni", "nadar", "shiv", "vijaykumar", "management", "directors", "chairwoman", "who is", "who are"],
+            "ask_hr": ["policy", "leave", "holiday", "benefit", "payroll", "salary", "pf", "insurance", "hr", "recruitment", "headcount", "employees", "workers"],
             "action_access": ["password", "reset", "access", "login", "permission", "account", "vpn", "mfa", "outlook", "teams"],
-            "action_ticket": ["broken", "not working", "fail", "error", "laptop", "monitor", "hardware", "fix", "repair", "ticket"],
-            "ask_finance": ["revenue", "profit", "ebitda", "margin", "growth", "financial", "expenditure", "cost", "dividend", "shareholder"]
+            "action_ticket": ["broken", "not working", "fail", "error", "laptop", "monitor", "hardware", "fix", "repair", "ticket", "issue"],
+            "ask_finance": ["revenue", "profit", "ebitda", "margin", "growth", "financial", "expenditure", "cost", "dividend", "shareholder", "earnings", "cagr", "turnover"]
         }
         
         override_intent = None
