@@ -18,24 +18,14 @@ def format_ui_response(response_type, content):
         # Remove redundant Question prefix and repeated query text
         main_text = re.sub(r'(?i)Question \d+:.*?\?', '', main_text, flags=re.DOTALL).strip()
         
-        # If the model didn't provide bullets, try to force them from sentences
-        if "*" not in main_text and len(main_text) > 30:
-            # Simple sentence splitting
+        # Clean up common AI artifacts for the new structure
+        main_text = main_text.replace("Answer:", "").strip()
+        
+        # Ensure we don't force bullets if we already have a structured sectioned response
+        if "1. 📊" not in main_text and "*" not in main_text and len(main_text) > 50:
             sentences = re.split(r'\. |\n', main_text)
             main_text = "\n".join([f"* {s.strip()}" for s in sentences if len(s.strip()) > 10])
 
-        # Convert bullet points to HTML list
-        if "*" in main_text:
-            lines = main_text.split("\n")
-            list_items = []
-            for line in lines:
-                line = line.strip()
-                if line.startswith("*"):
-                    list_items.append(f"<li>{line[1:].strip()}</li>")
-                elif line:
-                    list_items.append(f"<p>{line}</p>")
-            main_text = f"<ul>{''.join(list_items)}</ul>" if list_items else main_text
-        
         formatted = f"""
         <div class="answer-header">📋 FINANCIAL INSIGHT</div>
         <div class="answer-body">{main_text}</div>

@@ -83,14 +83,22 @@ def synthesize_answer(query, chunks):
     prompt = (
         f"Context: {context}\n\n"
         f"Question: {query}\n\n"
-        f"Instruction: Extract the most important financial data and metrics. Output them as a list of bullet points starting with '*'.\n"
-        f"Example format:\n"
-        f"* Metric 1: Value 1\n"
-        f"* Metric 2: Value 2\n\n"
+        f"Instruction: Follow this EXACT structure to format the answer based on the context. Use Markdown (bold, lists). Do not include introductory text.\n\n"
+        f"1. 📊 **Performance / Results**\n"
+        f"   - Key metrics, growth rates, and financials from context.\n"
+        f"   - Use **bold** for metrics and YoY/CC comparisons.\n\n"
+        f"2. 🌍 **Recognition / Awards / Culture**\n"
+        f"   - Employer rankings, industry awards, and sustainability marks.\n\n"
+        f"3. 🚀 **Innovation / Market Leadership**\n"
+        f"   - Product updates, acquisitions, and technology advancements (AI/Digital).\n\n"
+        f"4. 🏆 **Strategic Impact**\n"
+        f"   - Impact on brand value and shareholder positioning.\n\n"
+        f"5. ✨ **Key Takeaway**\n"
+        f"   - One-sentence summary linking achievements to growth or resilience.\n\n"
         f"Answer:"
     )
     
-    result = generator(prompt, max_new_tokens=200, do_sample=False, truncation=True)
+    result = generator(prompt, max_new_tokens=512, do_sample=False, truncation=True)
 
     synthesized = result[0]['generated_text'].strip()
 
