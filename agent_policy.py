@@ -16,7 +16,7 @@ def decide_next_step(intent_data, sentiment_data, entities, retrieval_score=0.0,
 
     
 
-    action_threshold = 0.65
+    action_threshold = 0.4
 
     rag_threshold = 0.05                                  
 
@@ -109,7 +109,7 @@ def decide_next_step(intent_data, sentiment_data, entities, retrieval_score=0.0,
 
                     "next_step": "clarify",
 
-                    "missing_entities": ["meeting_topic"],
+                    "missing_entities": ["topic"],
 
                     "reason": "Meeting topic is missing or too vague."
 

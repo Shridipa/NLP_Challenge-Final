@@ -64,7 +64,9 @@ def detect_intent(query, context=""):
 
         "ask_people": ["ceo", "chairman", "chairperson", "vijaykumar", "roshni", "nadar", "director", "executives", "founder", "board of directors"],
 
-        "ask_hr": ["leave", "policy", "employees", "headcount", "recruitment", "payroll"]
+        "ask_hr": ["leave", "policy", "employees", "headcount", "recruitment", "payroll"],
+        "action_schedule": ["schedule", "meeting", "book a", "arrange"],
+        "action_ticket": ["broken", "not working", "create a ticket", "raise a ticket"]
 
     }
 
@@ -79,11 +81,8 @@ def detect_intent(query, context=""):
                                                                                                         
 
             if top_intent != intent_key and confidence < 0.85:
-
                 top_intent = intent_key
-
                 confidence = max(confidence, 0.75)
-
                 break
 
     
@@ -100,7 +99,8 @@ def detect_intent(query, context=""):
 
             "action_ticket": ["broken", "not working", "fail", "error", "laptop", "monitor", "hardware", "fix", "repair", "ticket", "issue"],
 
-            "ask_finance": ["revenue", "profit", "ebitda", "margin", "growth", "financial", "expenditure", "cost", "dividend", "shareholder", "earnings", "cagr", "turnover"]
+            "ask_finance": ["revenue", "profit", "ebitda", "margin", "growth", "financial", "expenditure", "cost", "dividend", "shareholder", "earnings", "cagr", "turnover"],
+            "action_schedule": ["schedule", "meeting", "book", "call", "appointment", "calendar"]
 
         }
 
@@ -121,7 +121,6 @@ def detect_intent(query, context=""):
         if override_intent:
 
             top_intent = override_intent
-
             confidence = 0.85
 
             rationale = f"Keyword match for '{override_intent}' found."
