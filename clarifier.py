@@ -2,18 +2,25 @@ import sys
 import json
 
 def generate_clarification(missing_entities):
-    """Generates a clarification prompt for missing entities."""
     if not missing_entities:
-        return "No missing entities identified."
-
-    missing_str = ", ".join(missing_entities)
-    primary_missing = missing_entities[0]
+        return "I'm here to help! Could you please provide more details about your request?"
     
-    return (
-        f"I need one detail to proceed:\n"
-        f"- Missing: {missing_str}\n\n"
-        f"Question: Please provide {primary_missing} to continue."
-    )
+    entity_map = {
+        "employee_id": "your Employee ID (e.g., HCL123)",
+        "department": "the department involved (e.g., IT, HR, Finance)",
+        "description": "a description of the issue or request",
+        "application_name": "the name of the application (e.g., SAP, Outlook)",
+        "date": "the preferred date or time",
+        "topic": "the meeting topic",
+        "participants": "the attendees for the meeting"
+    }
+    
+    missing_readable = [entity_map.get(e, e.replace("_", " ")) for e in missing_entities]
+    
+    if len(missing_readable) == 1:
+        return f"I need one more detail to proceed. Could you please provide {missing_readable[0]}?"
+    else:
+        return f"To assist you better, I need a few more details: {', '.join(missing_readable[:-1])} and {missing_readable[-1]}."
 
 if __name__ == "__main__":
     try:

@@ -5,86 +5,211 @@ import datetime
 import re
 from main_assistant import run_pipeline
 
-LOGO_PATH = r"C:\Users\KIIT\.gemini\antigravity\brain\a9629e95-b346-4d4d-b089-caf1bdf50c37\hcltech_assistant_logo_1767985807080.png"
+# Color Palette Variables (from user schema)
+INK_BLACK = "#0f1020"  # DEFAULT / 500
+DARK_AMETHYST = "#2f195f" # DEFAULT / 500
+DEEP_LILAC = "#7353ba" # DEFAULT / 500
+PERIWINKLE = "#d8c4ff" # DEFAULT / 500
+PLATINUM = "#edf2f4" # DEFAULT / 500
 
-CUSTOM_CSS = """
-.header-area {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #e5e7eb;
-}
-.header-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #0f172a;
-    margin: 0;
-}
-.tag-badge {
-    background-color: #e0f2fe;
-    color: #0369a1;
-    font-size: 0.7rem;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 99px;
-    border: 1px solid #bae6fd;
-}
-.section-header {
-    font-weight: 600;
-    color: #334155;
-    margin-top: 15px;
-    margin-bottom: 5px;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.05em;
-}
-.ticket-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 12px;
-    color: white;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-.meeting-card {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 12px;
-    color: white;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-.card-badge {
-    background-color: rgba(255, 255, 255, 0.3);
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 0.7rem;
-    font-weight: 600;
-}
-.card-title {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 6px;
-}
-.card-detail {
-    font-size: 0.85rem;
-    opacity: 0.95;
-    margin-bottom: 3px;
-}
-.empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: #94a3b8;
+# High Contrast Lighter Variants
+WHITE = "#ffffff"
+LIGHT_PLATINUM = "#ffffff" 
+LIGHT_PERIWINKLE = "#ffffff"
+
+CUSTOM_CSS = f"""
+footer {{visibility: hidden}}
+#help_text {{
+    font-size: 0.8rem !important;
+    color: {WHITE} !important;
+    opacity: 0.9;
     font-style: italic;
-}
+    margin-top: 8px;
+    text-align: center;
+}}
+.header-area {{
+    background: linear-gradient(135deg, {DARK_AMETHYST} 0%, #170f27 100%);
+    padding: 1.2rem 1.8rem;
+    border-radius: 12px;
+    margin: 12px;
+    border: 1px solid rgba(115, 83, 186, 0.4);
+    color: {WHITE};
+    display: flex;
+    align-items: center;
+}}
+.header-logo-box {{
+    background: white;
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 18px;
+    font-size: 2rem;
+    box-shadow: 0 0 15px rgba(115, 83, 186, 0.3);
+}}
+.header-title-container {{
+    display: flex;
+    flex-direction: column;
+}}
+.header-title {{
+    font-size: 1.5rem !important;
+    font-weight: 800 !important;
+    color: {WHITE} !important;
+    margin: 0 !important;
+}}
+.header-subtitle {{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+}}
+.badge-ai {{
+    background: {DEEP_LILAC};
+    color: white;
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-weight: 900;
+    text-transform: uppercase;
+}}
+.version-text {{
+    color: {WHITE};
+    font-size: 0.75rem;
+    opacity: 0.8;
+}}
+.main-container {{
+    background: {INK_BLACK} !important;
+    padding: 10px 15px !important;
+}}
+.section-header {{
+    font-size: 0.85rem !important;
+    color: {WHITE} !important;
+    font-weight: 800 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 1.8rem 0 1rem 0 !important;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}}
+.section-header-text {{
+    font-size: 0.85rem !important;
+    color: {WHITE} !important;
+    font-weight: 800 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}}
+.kb-card, .sidebar-content {{
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(216, 196, 255, 0.15);
+    border-radius: 10px;
+    padding: 12px;
+}}
+.kb-item, .kb-item * {{
+    font-size: 0.9rem;
+    color: {WHITE} !important;
+    margin: 4px 0;
+    opacity: 1 !important;
+}}
+.kb-item li {{
+    margin-bottom: 8px !important;
+    margin-left: 20px !important;
+    list-style-type: disc !important;
+}}
+.chat-window {{
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(115, 83, 186, 0.3) !important;
+    border-radius: 14px !important;
+}}
+.dashboard-card {{
+    background: rgba(115, 83, 186, 0.05) !important;
+    border: 1px solid rgba(115, 83, 186, 0.4) !important;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}}
+.confirm-btn {{
+    background: linear-gradient(90deg, {DEEP_LILAC}, {DARK_AMETHYST}) !important;
+    border: 1px solid rgba(216, 196, 255, 0.2) !important;
+    color: white !important;
+    font-weight: 800 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 0 10px rgba(115, 83, 186, 0.3);
+}}
+.clear-btn {{
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(216, 196, 255, 0.1) !important;
+    color: {WHITE} !important;
+    font-size: 0.8rem !important;
+    margin-top: 15px !important;
+    border-radius: 8px !important;
+}}
+.footer-text {{
+    text-align: center;
+    color: {WHITE};
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin-top: 25px;
+    padding-bottom: 25px;
+}}
+.chatbot-wrap .message.user, .chatbot-wrap .message.user * {{
+    background: {DARK_AMETHYST} !important;
+    color: {WHITE} !important;
+    border-radius: 14px 14px 2px 14px !important;
+    border: none !important;
+}}
+.chatbot-wrap .message.bot, .chatbot-wrap .message.bot * {{
+    background: transparent !important;
+    color: {WHITE} !important;
+}}
+.chatbot-wrap .message.bot {{
+    background: rgba(115, 83, 186, 0.1) !important;
+    border: 1px solid rgba(115, 83, 186, 0.3) !important;
+    border-radius: 14px 14px 14px 2px !important;
+    padding: 12px 16px !important;
+}}
+.example-btn {{
+    background: rgba(255, 255, 255, 0.07) !important;
+    border: 1px solid rgba(216, 196, 255, 0.2) !important;
+    color: {WHITE} !important;
+    font-size: 0.85rem !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease;
+}}
+.tabs, .tab-nav {{
+    background: transparent !important;
+    border-bottom: 1px solid rgba(216, 196, 255, 0.2) !important;
+}}
+.tab-nav button {{
+    color: {WHITE} !important;
+    font-weight: 700 !important;
+    opacity: 0.7;
+}}
+.tab-nav button.selected {{
+    color: {WHITE} !important;
+    opacity: 1;
+    border-bottom: 3px solid {DEEP_LILAC} !important;
+}}
+.dashboard-card label {{
+    color: {WHITE} !important;
+    font-weight: 700 !important;
+}}
+input, textarea {{
+    color: {WHITE} !important;
+}}
+.action-label {{
+    background: {DEEP_LILAC};
+    color: white;
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: inline-block;
+    margin-bottom: 4px;
+}}
 """
 
 tickets_storage = []
@@ -93,19 +218,15 @@ pending_actions = []
 
 def format_pending_actions_display(actions):
     if not actions:
-        return "<div class='empty-state'>✨ No pending actions.<br/>Ask the assistant to book something!</div>"
-    
+        return f"<div style='text-align:center; padding:40px; color:{PERIWINKLE}; opacity:0.5; font-size:0.9rem;'>✨ No pending actions.<br>Ask the assistant to book something!</div>"
     html = ""
     for idx, action in enumerate(actions):
         action_name = action.get('action', 'Action').replace('_', ' ').title()
         html += f"""
-        <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; border-radius: 12px; padding: 12px; margin-bottom: 10px;">
-            <div style="font-weight: 700; color: #1e40af; font-size: 0.9rem; margin-bottom: 4px;">🎯 PENDING: {action_name}</div>
-            <div style="font-size: 0.8rem; color: #475569;">
-                <b>Context:</b> {action.get('topic', action.get('issue', 'General Request'))[:40]}...
-            </div>
-            <div style="display: flex; gap: 8px; margin-top: 8px;">
-                <span style="background: #3b82f6; color: white; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem;">Action #{idx+1}</span>
+        <div style="background: rgba(115, 83, 186, 0.1); border: 1px solid {DEEP_LILAC}; border-left: 5px solid {DEEP_LILAC}; border-radius: 12px; padding: 15px; margin-bottom: 12px;">
+            <div style="font-weight: 800; color: {PERIWINKLE}; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 6px;">Action #{idx+1}: {action_name}</div>
+            <div style="font-size: 0.95rem; color: {PLATINUM}; line-height: 1.4;">
+                {action.get('topic', action.get('issue', 'General Request'))[:60]}
             </div>
         </div>
         """
@@ -116,236 +237,146 @@ def confirm_action(index):
         idx = int(index) - 1
         if 0 <= idx < len(pending_actions):
             action = pending_actions.pop(idx)
-            action_type = action.get("action", "")
-            
-            if action_type == "schedule_meeting":
-                meetings_storage.append(action)
-                msg = f"✅ Meeting '{action.get('topic')}' confirmed!"
-            elif action_type == "create_ticket":
-                tickets_storage.append(action)
-                msg = f"✅ Ticket '{action.get('issue')}' confirmed!"
-            else:
-                msg = "✅ Action confirmed!"
-                
-            return msg, format_pending_actions_display(pending_actions), format_meetings_display(meetings_storage), format_tickets_display(tickets_storage)
-        return "❌ Invalid index", format_pending_actions_display(pending_actions), format_meetings_display(meetings_storage), format_tickets_display(tickets_storage)
-    except:
-        return "❌ Error", format_pending_actions_display(pending_actions), format_meetings_display(meetings_storage), format_tickets_display(tickets_storage)
-
-def clear_all_pending():
-    pending_actions.clear()
-    return "🗑️ Cleared.", format_pending_actions_display(pending_actions)
+            if action.get("action") == "schedule_meeting": meetings_storage.append(action)
+            elif action.get("action") == "create_ticket": tickets_storage.append(action)
+            return "✅ Confirmed", format_pending_actions_display(pending_actions), format_meetings_display(meetings_storage), format_tickets_display(tickets_storage)
+        return "❌ Invalid selection", format_pending_actions_display(pending_actions), format_meetings_display(meetings_storage), format_tickets_display(tickets_storage)
+    except: return "❌ Error processing", format_pending_actions_display(pending_actions), format_meetings_display(meetings_storage), format_tickets_display(tickets_storage)
 
 def format_tickets_display(tickets):
-    if not tickets:
-        return "<div class='empty-state'>📂 No tickets.</div>"
-    
+    if not tickets: return f"<div style='text-align:center; padding:30px; color:{PERIWINKLE}; opacity:0.6;'>📂 No active tickets</div>"
     html = ""
-    for idx, ticket in enumerate(tickets):
-        priority_color = {"High": "#ef4444", "Medium": "#f59e0b", "Low": "#10b981"}.get(ticket.get('priority', 'Medium'), "#6b7280")
+    for ticket in tickets:
+        p = ticket.get('priority', 'Medium').upper()
         html += f"""
-        <div class="ticket-card">
-            <div class="card-header">
-                <span class="card-badge">#{idx + 1} - {ticket.get('department', 'IT')}</span>
-                <span style="background-color: {priority_color}; padding: 3px 8px; border-radius: 8px; font-size: 0.7rem;">{ticket.get('priority', 'Medium')}</span>
-            </div>
-            <div class="card-title">{ticket.get('issue', 'No description')}</div>
-            <div class="card-detail">📅 {ticket.get('timestamp', 'N/A')}</div>
-            <div class="card-detail">Status: {ticket.get('status', 'Open')}</div>
+        <div class="ticket-card" style="background: rgba(255,255,255,0.05); padding:10px; border-radius:8px; margin-bottom:8px; border-left:4px solid {DEEP_LILAC};">
+            <div style="font-size:0.7rem; color:{PERIWINKLE};">{ticket.get('department')} • {p}</div>
+            <div style="font-weight:700; color:{LIGHT_PLATINUM};">{ticket.get('issue')}</div>
         </div>
         """
     return html
 
 def format_meetings_display(meetings):
-    if not meetings:
-        return "<div class='empty-state'>📅 No meetings.</div>"
-    
+    if not meetings: return f"<div style='text-align:center; padding:30px; color:{PERIWINKLE}; opacity:0.6;'>📅 No meetings</div>"
     html = ""
-    for idx, meeting in enumerate(meetings):
+    for mt in meetings:
         html += f"""
-        <div class="meeting-card">
-            <div class="card-header">
-                <span class="card-badge">#{idx + 1}</span>
-                <span style="background-color: rgba(255, 255, 255, 0.3); padding: 3px 8px; border-radius: 8px; font-size: 0.7rem;">{meeting.get('date_time', 'TBD')}</span>
-            </div>
-            <div class="card-title">{meeting.get('topic', 'No topic')}</div>
-            <div class="card-detail">👥 {meeting.get('participants', 'N/A')}</div>
-            <div class="card-detail">📍 {meeting.get('location', 'Virtual')}</div>
+        <div class="meeting-card" style="background: rgba(255,255,255,0.05); padding:10px; border-radius:8px; margin-bottom:8px; border-left:4px solid {PERIWINKLE};">
+            <div style="font-size:0.7rem; color:{PERIWINKLE};">{mt.get('date_time', 'TBD')}</div>
+            <div style="font-weight:700; color:{LIGHT_PLATINUM};">{mt.get('topic')}</div>
         </div>
         """
     return html
 
-def book_ticket_quick(issue, department, priority):
-    if not issue.strip():
-        return "⚠️ Provide description", format_tickets_display(tickets_storage)
-    
-    ticket = {
-        "action": "create_ticket",
-        "department": department,
-        "issue": issue,
-        "priority": priority,
-        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %I:%M %p"),
-        "status": "Open"
-    }
-    tickets_storage.append(ticket)
-    return f"✅ Ticket booked!", format_tickets_display(tickets_storage)
-
-def schedule_meeting_quick(topic, participants, date_time, location):
-    if not topic.strip():
-        return "⚠️ Provide topic", format_meetings_display(meetings_storage)
-    
-    meeting = {
-        "action": "schedule_meeting",
-        "topic": topic,
-        "participants": participants,
-        "date_time": date_time,
-        "location": location,
-        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %I:%M %p")
-    }
-    meetings_storage.append(meeting)
-    return f"📅 Meeting scheduled!", format_meetings_display(meetings_storage)
-
-def delete_ticket(index):
-    try:
-        idx = int(index) - 1
-        if 0 <= idx < len(tickets_storage):
-            removed = tickets_storage.pop(idx)
-            return f"🗑️ Deleted: {removed.get('issue', 'Unknown')}", format_tickets_display(tickets_storage)
-        return "❌ Invalid", format_tickets_display(tickets_storage)
-    except:
-        return "❌ Error", format_tickets_display(tickets_storage)
-
-def delete_meeting(index):
-    try:
-        idx = int(index) - 1
-        if 0 <= idx < len(meetings_storage):
-            removed = meetings_storage.pop(idx)
-            return f"🗑️ Deleted: {removed.get('topic', 'Unknown')}", format_meetings_display(meetings_storage)
-        return "❌ Invalid", format_meetings_display(meetings_storage)
-    except:
-        return "❌ Error", format_meetings_display(meetings_storage)
-
 def respond(message, history):
+    if not message: return "", history, format_pending_actions_display(pending_actions)
     history.append({"role": "user", "content": message})
     history.append({"role": "assistant", "content": ""})
-    
     yield "", history, format_pending_actions_display(pending_actions)
-
     bot_msg_full = run_pipeline(message, history[:-2])
-    
     words = bot_msg_full.split()
     streaming_msg = ""
     for i, word in enumerate(words):
         streaming_msg += word + " "
         history[-1]["content"] = streaming_msg
-        if i < 5 or i % 3 == 0 or i == len(words) - 1:
-            yield "", history, format_pending_actions_display(pending_actions)
-    
+        if i % 3 == 0 or i == len(words) - 1: yield "", history, format_pending_actions_display(pending_actions)
     try:
         json_match = re.search(r'```json\s*\n(.*?)\n```', bot_msg_full, re.DOTALL)
         if json_match:
-            action_json_str = json_match.group(1)
-            action_data = json.loads(action_json_str)
+            action_data = json.loads(json_match.group(1))
             pending_actions.insert(0, action_data)
             yield "", history, format_pending_actions_display(pending_actions)
-    except:
-        pass
+    except: pass
 
-theme = gr.themes.Soft(
-    primary_hue="blue",
-    neutral_hue="slate",
-    text_size="sm",
-    font=[gr.themes.GoogleFont("Inter"), "ui-sans-serif", "system-ui"]
+# User Specified Hues
+LILAC_HUE = gr.themes.Color(name="lilac", c50="#e3ddf1", c100="#c8bae4", c200="#ac98d6", c300="#9076c8", c400="#7353ba", c500="#5b3e9b", c600="#442e74", c700="#2e1f4d", c800="#170f27", c900="#0f091a", c950="#08050e")
+NEUTRAL_HUE = gr.themes.Color(name="ink", c50="#fbfcfd", c100="#edf2f4", c200="#b1c6cf", c300="#759bab", c400="#496a77", c500="#24353b", c600="#0c0d19", c700="#090913", c800="#06060c", c900="#0f1020", c950="#030306")
+
+theme = gr.themes.Soft(primary_hue=LILAC_HUE, neutral_hue=NEUTRAL_HUE, text_size="md", font=[gr.themes.GoogleFont("Outfit"), "sans-serif"]).set(
+    body_background_fill=INK_BLACK, block_background_fill=INK_BLACK, block_label_text_color=LIGHT_PERIWINKLE, block_title_text_color=LIGHT_PLATINUM,
+    button_primary_background_fill=DEEP_LILAC, button_primary_background_fill_hover="#5b3e9b", button_primary_text_color=LIGHT_PLATINUM,
+    border_color_primary=DARK_AMETHYST, input_background_fill="#090913", input_border_color=DARK_AMETHYST,
 )
 
-with gr.Blocks(title="HCLTech Assistant", theme=theme, css=CUSTOM_CSS) as demo:
+with gr.Blocks(title="HCLTech AI Assistant") as demo:
+    # Header Section
     with gr.Row(elem_classes="header-area"):
-        with gr.Column(scale=9):
-            gr.HTML("""
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div>
-                        <h1 class="header-title">HCLTech Agentic Assistant</h1>
-                        <span class="tag-badge">ENTERPRISE V3.0</span>
-                    </div>
+        gr.HTML(f"""
+            <div class="header-logo-box">🧠</div>
+            <div class="header-title-container">
+                <h1 class="header-title">HCLTech Agentic Assistant</h1>
+                <div class="header-subtitle">
+                    <span class="badge-ai">AI POWERED</span>
+                    <span class="version-text">v3.0.4 • Stable Release</span>
                 </div>
-            """)
+            </div>
+        """)
 
-    with gr.Row():
-        with gr.Column(scale=2, min_width=250):
-            gr.Markdown("### 📌 Enterprise Hub", elem_classes="section-header")
-            with gr.Accordion("Capabilities & Knowledge", open=True):
-                gr.Markdown("""
-                *   ✅ Finance & Strategy RAG
-                *   ✅ IT Ticketing Automation
-                *   ✅ Meeting Scheduler
-                *   ✅ HR Policy Assistant
-                *   ✅ Access Management
+    with gr.Row(elem_classes="main-container"):
+        # Left Sidebar: Intelligence Hub
+        with gr.Column(scale=1):
+            gr.HTML("<div class='section-header section-header-text'>🛠 INTELLIGENCE HUB</div>")
+            with gr.Accordion("Knowledge Base", open=True):
+                gr.HTML(f"""
+                    <div class="kb-item">📊 Finance & Strategy RAG</div>
+                    <div class="kb-item">🎫 IT Ticketing Automation</div>
+                    <div class="kb-item">📅 Meeting Scheduling</div>
+                    <div class="kb-item">📜 HR Policy Assistant</div>
+                    <div class="kb-item">🔐 Access Management</div>
                 """)
             
-            gr.Markdown("### 🎯 Quick Actions", elem_classes="section-header")
-            gr.Markdown("""
-            - "Book a ticket for laptop repair"
-            - "Schedule a meeting with HR"
-            - "What's our revenue growth?"
-            """)
+            gr.HTML("<div class='section-header section-header-text'>💡 QUICK COMMANDS</div>")
+            gr.Markdown("- \"Book a laptop repair ticket\"\n- \"Schedule sync with HR team\"\n- \"Analyze FY25 revenue growth\"", elem_classes="kb-item")
 
-        with gr.Column(scale=4):
-            gr.Markdown("### 💬 Assistant")
-            chatbot = gr.Chatbot(height=500, show_label=False)
-            
+        # Center: Conversation
+        with gr.Column(scale=3):
+            gr.HTML("<div class='section-header section-header-text'>💬 Conversation</div>")
+            chatbot = gr.Chatbot(height=520, show_label=False, elem_classes="chat-window chatbot-wrap", value=[[None, "👋 Hello! I am your HCLTech Agentic Assistant. How can I help you today?"]])
             with gr.Row():
-                user_input = gr.Textbox(placeholder="Ask me anything...", scale=8, show_label=False)
-                submit_btn = gr.Button("Send", variant="primary", scale=1)
+                user_input = gr.Textbox(placeholder="Describe your request or ask a question...", scale=10, show_label=False, container=False)
+                submit_btn = gr.Button("🚀", variant="primary", scale=1, elem_classes="confirm-btn")
             
-            gr.Examples(
-                examples=["What is the revenue growth for FY25?", "Raise an IT ticket", "Schedule a meeting"],
-                inputs=user_input
-            )
+            gr.HTML("<div class='section-header section-header-text'>📑 Examples</div>")
+            with gr.Row():
+                ex1 = gr.Button("What is the revenue growth for FY25?", elem_classes="example-btn")
+                ex2 = gr.Button("Raise an IT ticket for Wi-Fi issues", elem_classes="example-btn")
+                ex3 = gr.Button("Schedule a meeting for project kickoff", elem_classes="example-btn")
 
-        with gr.Column(scale=3, min_width=300):
-            gr.Markdown("### 📊 Dashboard", elem_classes="section-header")
-            with gr.Tabs():
-                with gr.Tab("🎯 Pending"):
-                    pending_output = gr.HTML(format_pending_actions_display(pending_actions))
-                    with gr.Row():
-                        pending_index = gr.Number(label="Action #", precision=0, minimum=1)
-                        confirm_pending_btn = gr.Button("✅ Confirm", variant="primary")
-                    action_result_msg = gr.Textbox(label="Result", interactive=False, show_label=False)
-                    clear_pending_btn = gr.Button("🗑️ Clear All", size="sm")
-
-                with gr.Tab("📂 Tickets"):
-                    tickets_output = gr.HTML(format_tickets_display(tickets_storage))
-                    with gr.Accordion("🎫 Quick Book", open=False):
-                        ticket_issue = gr.Textbox(label="Issue")
-                        ticket_dept = gr.Dropdown(choices=["IT", "HR", "Finance", "Facilities"], value="IT", label="Dept")
-                        ticket_priority = gr.Radio(choices=["High", "Medium", "Low"], value="Medium", label="Priority")
-                        book_ticket_btn = gr.Button("📝 Book")
-                    ticket_status = gr.Textbox(interactive=False, show_label=False)
-                    with gr.Row():
-                        delete_ticket_index = gr.Number(label="Ticket #", precision=0, minimum=1)
-                        delete_ticket_btn = gr.Button("🗑️ Delete", variant="stop", size="sm")
+        # Right Panel: Operational Dashboard
+        with gr.Column(scale=2):
+            gr.HTML("<div class='section-header section-header-text'>📋 OPERATIONAL DASHBOARD</div>")
+            with gr.Group(elem_classes="dashboard-card"):
+                with gr.Tabs():
+                    with gr.Tab("🎯 Pending"):
+                        pending_output = gr.HTML(format_pending_actions_display(pending_actions))
+                    with gr.Tab("📁 Ticket Registry"):
+                        tickets_output = gr.HTML(format_tickets_display(tickets_storage))
+                    with gr.Tab("📅 Meeting Logs"):
+                        meetings_output = gr.HTML(format_meetings_display(meetings_storage))
                 
-                with gr.Tab("📅 Meetings"):
-                    meetings_output = gr.HTML(format_meetings_display(meetings_storage))
-                    with gr.Accordion("📆 Quick Schedule", open=False):
-                        meeting_topic = gr.Textbox(label="Topic")
-                        meeting_participants = gr.Textbox(label="Participants")
-                        meeting_datetime = gr.Textbox(label="Date & Time")
-                        meeting_location = gr.Textbox(label="Location", value="Virtual")
-                        schedule_meeting_btn = gr.Button("📅 Schedule")
-                    meeting_status = gr.Textbox(interactive=False, show_label=False)
-                    with gr.Row():
-                        delete_meeting_index = gr.Number(label="Meeting #", precision=0, minimum=1)
-                        delete_meeting_btn = gr.Button("🗑️ Delete", variant="stop", size="sm")
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        gr.Markdown('<span class="action-label">Action ID</span>', elem_classes="no-padding")
+                        pending_index = gr.Number(precision=0, value=0, show_label=False, container=False)
+                    with gr.Column(scale=1):
+                        gr.HTML('<div style="height: 24px;"></div>')
+                        confirm_btn = gr.Button("Confirm", elem_classes="confirm-btn")
+                
+                gr.Button("🗑 Clear Queue", elem_classes="clear-btn")
+                res_msg = gr.Textbox(visible=False)
+
+    # Footer
+    gr.HTML("<div class='footer-text'>Use via API • Built with Gradio 🤖 • Settings ⚙️</div>")
+
+    # Event Handlers
+    def handle_example(text): return text
+    ex1.click(handle_example, [ex1], [user_input])
+    ex2.click(handle_example, [ex2], [user_input])
+    ex3.click(handle_example, [ex3], [user_input])
 
     user_input.submit(respond, [user_input, chatbot], [user_input, chatbot, pending_output])
     submit_btn.click(respond, [user_input, chatbot], [user_input, chatbot, pending_output])
-    confirm_pending_btn.click(confirm_action, [pending_index], [action_result_msg, pending_output, meetings_output, tickets_output])
-    clear_pending_btn.click(clear_all_pending, None, [action_result_msg, pending_output])
-    book_ticket_btn.click(book_ticket_quick, [ticket_issue, ticket_dept, ticket_priority], [ticket_status, tickets_output])
-    delete_ticket_btn.click(delete_ticket, delete_ticket_index, [ticket_status, tickets_output])
-    schedule_meeting_btn.click(schedule_meeting_quick, [meeting_topic, meeting_participants, meeting_datetime, meeting_location], [meeting_status, meetings_output])
-    delete_meeting_btn.click(delete_meeting, delete_meeting_index, [meeting_status, meetings_output])
+    confirm_btn.click(confirm_action, [pending_index], [res_msg, pending_output, meetings_output, tickets_output])
 
 if __name__ == "__main__":
-    demo.launch(server_name="127.0.0.1", server_port=7861, allowed_paths=["C:\\"])
+    demo.launch(server_name="127.0.0.1", allowed_paths=["C:\\"], theme=theme, css=CUSTOM_CSS)
