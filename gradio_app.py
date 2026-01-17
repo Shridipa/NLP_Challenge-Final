@@ -331,7 +331,7 @@ with gr.Blocks(title="HCLTech AI Assistant") as demo:
         # Center: Conversation
         with gr.Column(scale=3):
             gr.HTML("<div class='section-header section-header-text'>💬 Conversation</div>")
-            chatbot = gr.Chatbot(height=520, show_label=False, elem_classes="chat-window chatbot-wrap", value=[[None, "👋 Hello! I am your HCLTech Agentic Assistant. How can I help you today?"]])
+            chatbot = gr.Chatbot(height=520, show_label=False, elem_classes="chat-window chatbot-wrap", value=[{"role": "assistant", "content": "👋 Hello! I am your HCLTech Agentic Assistant. How can I help you today?"}])
             with gr.Row():
                 user_input = gr.Textbox(placeholder="Describe your request or ask a question...", scale=10, show_label=False, container=False)
                 submit_btn = gr.Button("🚀", variant="primary", scale=1, elem_classes="confirm-btn")
