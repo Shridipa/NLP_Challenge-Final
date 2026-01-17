@@ -62,6 +62,8 @@ python gradio_app.py
 - Report an issue:
 "My laptop is extremely slow (urgent)."
 
+Demo video link- https://drive.google.com/file/d/1XdwsUorYmzm68y7RskkhRKpUF5pRQhIU/view?usp=sharing
+
 
 
 
